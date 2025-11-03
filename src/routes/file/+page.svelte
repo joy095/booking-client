@@ -13,10 +13,7 @@
 		contrast: 100,
 		saturation: 100,
 		hue: 0,
-		blur: 0,
 		sepia: 0,
-		grayscale: false,
-		invert: false,
 		rotation: 0,
 		flipH: false,
 		flipV: false,
@@ -107,10 +104,7 @@
 			`contrast(${state.contrast}%)`,
 			`saturate(${state.saturation}%)`,
 			`hue-rotate(${state.hue}deg)`,
-			`blur(${state.blur}px)`,
-			`sepia(${state.sepia}%)`,
-			state.grayscale ? 'grayscale(100%)' : 'grayscale(0%)',
-			state.invert ? 'invert(100%)' : 'invert(0%)'
+			`sepia(${state.sepia}%)`
 		].join(' ');
 
 		ctx.drawImage(state.image, 0, 0, canvas.width, canvas.height);
@@ -156,13 +150,6 @@
 	}
 
 	let downloadText = $derived(`Download ${state.format.toUpperCase()}`);
-
-	function setFormat(format: 'webp' | 'jpeg' | 'png') {
-		state.format = format;
-		const qualityControl = document.getElementById('qualityControl');
-		if (qualityControl) qualityControl.style.display = format === 'png' ? 'none' : 'block';
-		debouncedUpdateSizeInfo();
-	}
 
 	function rotate(deg: number) {
 		state.rotation = (state.rotation + deg + 360) % 360;
@@ -246,10 +233,7 @@
 		state.contrast = 100;
 		state.saturation = 100;
 		state.hue = 0;
-		state.blur = 0;
 		state.sepia = 0;
-		state.grayscale = false;
-		state.invert = false;
 		state.rotation = 0;
 		state.flipH = false;
 		state.flipV = false;
@@ -274,25 +258,9 @@
 	$effect(() => {
 		if (state.image) debouncedUpdateSizeInfo();
 	});
-
-	function updateHeightFromWidth() {
-		if (state.maintainAspect) {
-			const ratio = state.originalWidth / state.originalHeight;
-			state.height = Math.round(state.width / ratio);
-		}
-	}
-
-	function updateWidthFromHeight() {
-		if (state.maintainAspect) {
-			const ratio = state.originalWidth / state.originalHeight;
-			state.width = Math.round(state.height * ratio);
-		}
-	}
 </script>
 
-<div class="container">
-	<h1 class="title">Live Image Editor</h1>
-
+<div class="container mx-auto mt-10">
 	<div id="uploadSection" class="upload-card" bind:this={uploadSection}>
 		<svg class="upload-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 			<path
@@ -325,22 +293,6 @@
 			<div class="canvas-container">
 				<canvas id="mainCanvas" bind:this={canvas}></canvas>
 			</div>
-			<div id="sizeInfo" class="size-info hidden">
-				<div class="size-item">
-					<span class="size-label">Original:</span>
-					<span class="size-value" id="originalSize">0 KB</span>
-				</div>
-				<div>→</div>
-				<div class="size-item">
-					<span class="size-label">Edited:</span>
-					<span class="size-value" id="editedSize">0 KB</span>
-				</div>
-				<div id="sizeReduction" class="size-reduction">0%</div>
-			</div>
-			<div class="action-buttons">
-				<button on:click={downloadImage} class="download-btn">{downloadText}</button>
-				<button on:click={resetAll} class="secondary-btn">New Image</button>
-			</div>
 		</div>
 
 		<div class="controls-panel">
@@ -352,64 +304,6 @@
 						<button on:click={() => setPreset(1024)} class="preset-btn">1024px Square</button>
 						<button on:click={() => setPreset('hd')} class="preset-btn">HD (1920x1080)</button>
 						<button on:click={() => setPreset('2k')} class="preset-btn">2K (2560x1440)</button>
-					</div>
-				</div>
-
-				<div class="control-section">
-					<h3 class="section-title">Dimensions</h3>
-					<div class="control-item">
-						<label class="control-label">Width: {state.width}px</label>
-						<input
-							type="number"
-							class="dimension-input"
-							bind:value={state.width}
-							on:input={updateHeightFromWidth}
-						/>
-					</div>
-					<div class="control-item">
-						<label class="control-label">Height: {state.height}px</label>
-						<input
-							type="number"
-							class="dimension-input"
-							bind:value={state.height}
-							on:input={updateWidthFromHeight}
-						/>
-					</div>
-					<label class="checkbox-label">
-						<input type="checkbox" bind:checked={state.maintainAspect} />
-						<span>Maintain aspect ratio</span>
-					</label>
-				</div>
-
-				<div class="control-section">
-					<h3 class="section-title">Output Settings</h3>
-					<div class="control-item">
-						<label class="control-label">Format</label>
-						<div class="format-buttons">
-							<button
-								class="format-btn {state.format === 'webp' ? 'active' : ''}"
-								on:click={() => setFormat('webp')}>WebP</button
-							>
-							<button
-								class="format-btn {state.format === 'jpeg' ? 'active' : ''}"
-								on:click={() => setFormat('jpeg')}>JPEG</button
-							>
-							<button
-								class="format-btn {state.format === 'png' ? 'active' : ''}"
-								on:click={() => setFormat('png')}>PNG</button
-							>
-						</div>
-					</div>
-					<div class="control-item" id="qualityControl">
-						<label class="control-label">Quality: {state.quality}%</label>
-						<input
-							type="range"
-							min="1"
-							max="100"
-							step="5"
-							bind:value={state.quality}
-							class="slider"
-						/>
 					</div>
 				</div>
 
@@ -452,17 +346,7 @@
 						<label class="control-label">Hue: {state.hue}°</label>
 						<input type="range" min="0" max="360" step="1" bind:value={state.hue} class="slider" />
 					</div>
-					<div class="control-item">
-						<label class="control-label">Blur: {state.blur}px</label>
-						<input
-							type="range"
-							min="0"
-							max="10"
-							step="0.5"
-							bind:value={state.blur}
-							class="slider"
-						/>
-					</div>
+
 					<div class="control-item">
 						<label class="control-label">Sepia: {state.sepia}%</label>
 						<input
@@ -477,24 +361,21 @@
 				</div>
 
 				<div class="control-section">
-					<h3 class="section-title">Filters</h3>
-					<label class="checkbox-label">
-						<input type="checkbox" bind:checked={state.grayscale} />
-						<span>Grayscale</span>
-					</label>
-					<label class="checkbox-label">
-						<input type="checkbox" bind:checked={state.invert} />
-						<span>Invert</span>
-					</label>
-				</div>
-
-				<div class="control-section">
 					<h3 class="section-title">Transform</h3>
 					<div class="control-item">
 						<label class="control-label">Rotation: {state.rotation}°</label>
-						<div class="button-group">
-							<button on:click={() => rotate(-90)} class="transform-btn">↶ -90°</button>
-							<button on:click={() => rotate(90)} class="transform-btn">↷ +90°</button>
+
+						<div class="rotation-control">
+							<input
+								class="slider"
+								type="range"
+								min="0"
+								max="360"
+								step="1"
+								bind:value={state.rotation}
+								on:input={(e) => rotate(+e.target.value)}
+							/>
+							<span>{state.rotation}°</span>
 						</div>
 					</div>
 					<div class="button-group">
@@ -516,33 +397,6 @@
 </div>
 
 <style>
-	* {
-		margin: 0;
-		padding: 0;
-		box-sizing: border-box;
-	}
-
-	body {
-		font-family:
-			-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-		background: linear-gradient(135deg, #f5f3ff 0%, #dbeafe 100%);
-		min-height: 100vh;
-		padding: 1rem;
-	}
-
-	.container {
-		max-width: 1400px;
-		margin: 0 auto;
-	}
-
-	.title {
-		font-size: 2.25rem;
-		font-weight: bold;
-		text-align: center;
-		margin-bottom: 2rem;
-		color: #1f2937;
-	}
-
 	.upload-card {
 		background: white;
 		border-radius: 1rem;
@@ -646,92 +500,6 @@
 		box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
 	}
 
-	.size-info {
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		gap: 1rem;
-		margin-top: 1rem;
-		padding: 0.75rem;
-		background: #f9fafb;
-		border-radius: 0.5rem;
-		font-size: 0.875rem;
-	}
-
-	.size-item {
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-	}
-
-	.size-label {
-		color: #6b7280;
-		font-size: 0.75rem;
-		text-transform: uppercase;
-	}
-
-	.size-value {
-		font-weight: 600;
-		color: #374151;
-		margin-top: 0.25rem;
-	}
-
-	.size-reduction {
-		font-weight: 700;
-		padding: 0.25rem 0.75rem;
-		border-radius: 0.375rem;
-	}
-
-	.size-reduction.positive {
-		color: #16a34a;
-		background: #dcfce7;
-	}
-
-	.size-reduction.negative {
-		color: #dc2626;
-		background: #fee2e2;
-	}
-
-	.action-buttons {
-		display: flex;
-		gap: 0.75rem;
-		margin-top: 1.5rem;
-	}
-
-	.download-btn,
-	.secondary-btn {
-		flex: 1;
-		padding: 0.75rem 1.5rem;
-		border: none;
-		border-radius: 0.5rem;
-		font-size: 1rem;
-		cursor: pointer;
-		transition: all 0.2s;
-	}
-
-	.download-btn {
-		background: #10b981;
-		color: white;
-	}
-
-	.download-btn:hover:not(:disabled) {
-		background: #059669;
-	}
-
-	.download-btn:disabled {
-		background: #9ca3af;
-		cursor: not-allowed;
-	}
-
-	.secondary-btn {
-		background: #6b7280;
-		color: white;
-	}
-
-	.secondary-btn:hover {
-		background: #4b5563;
-	}
-
 	.controls-scroll {
 		max-height: calc(100vh - 5rem);
 		overflow-y: auto;
@@ -762,19 +530,6 @@
 		margin-bottom: 0.5rem;
 	}
 
-	.dimension-input {
-		width: 100%;
-		padding: 0.5rem;
-		border: 2px solid #e5e7eb;
-		border-radius: 0.375rem;
-		font-size: 0.875rem;
-	}
-
-	.dimension-input:focus {
-		outline: none;
-		border-color: #9333ea;
-	}
-
 	.preset-buttons {
 		display: flex;
 		flex-wrap: wrap;
@@ -793,29 +548,6 @@
 
 	.preset-btn:hover {
 		background: #f3f4f6;
-		border-color: #9333ea;
-	}
-
-	.format-buttons {
-		display: grid;
-		grid-template-columns: repeat(3, 1fr);
-		gap: 0.5rem;
-	}
-
-	.format-btn {
-		padding: 0.5rem;
-		border: 2px solid #e5e7eb;
-		border-radius: 0.375rem;
-		background: white;
-		cursor: pointer;
-		font-size: 0.875rem;
-		font-weight: 500;
-		transition: all 0.2s;
-	}
-
-	.format-btn.active {
-		background: #9333ea;
-		color: white;
 		border-color: #9333ea;
 	}
 
@@ -844,15 +576,6 @@
 		background: #9333ea;
 		cursor: pointer;
 		border: none;
-	}
-
-	.checkbox-label {
-		display: flex;
-		align-items: center;
-		gap: 0.5rem;
-		cursor: pointer;
-		font-size: 0.875rem;
-		margin-bottom: 0.5rem;
 	}
 
 	.button-group {
