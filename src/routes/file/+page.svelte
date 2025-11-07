@@ -18,7 +18,7 @@
 		flipH: false,
 		flipV: false,
 		format: 'webp' as 'webp' | 'jpeg' | 'png',
-		quality: 80,
+		quality: 75,
 		maintainAspect: true
 	});
 
